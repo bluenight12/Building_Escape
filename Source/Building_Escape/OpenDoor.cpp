@@ -6,8 +6,9 @@
 
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor() {
-    // Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-    // off to improve performance if you don't need them.
+    // Set this component to be initialized when the game starts, and to be
+    // ticked every frame.  You can turn these features off to improve
+    // performance if you don't need them.
     PrimaryComponentTick.bCanEverTick = true;
 
     // ...
@@ -16,15 +17,23 @@ UOpenDoor::UOpenDoor() {
 // Called when the game starts
 void UOpenDoor::BeginPlay() {
     Super::BeginPlay();
+    InitialYaw = GetOwner()->GetActorRotation().Yaw;
+    CurrentYaw = InitialYaw;
+    TargetYaw += InitialYaw;
 }
 
 // Called every frame
-void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) {
+void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    float CurrentYaw = GetOwner()->GetActorRotation().Yaw;
-    FRotator OpenDoor(0.f, 0.f, 0.f);
-    //생성자에서 GetOwner 사용 X Null값 반환할 수도 있음
-    OpenDoor.Yaw = FMath::FInterpConstantTo(CurrentYaw, TargetYaw, DeltaTime, 20);
-    GetOwner()->SetActorRotation(OpenDoor);
+    if (PressurePlate->IsOverlappingActor(ActorThatOpens)) {
+        OpenDoor(DeltaTime);
+    }
+}
+
+void UOpenDoor::OpenDoor(float DeltaTime) {
+    CurrentYaw = FMath::Lerp(CurrentYaw, TargetYaw, DeltaTime * 0.5f);
+    FRotator DoorRotation = GetOwner()->GetActorRotation();
+    DoorRotation.Yaw = CurrentYaw;
+    GetOwner()->SetActorRotation(DoorRotation);
 }
